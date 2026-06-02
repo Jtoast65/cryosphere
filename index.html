@@ -60,6 +60,9 @@
   .controls button:hover{background:#2196f3;color:#fff}
   .controls button.active{background:#2196f3;color:#fff;border-color:#2196f3}
   .readout{font-family:'Raleway',sans-serif;font-size:12px;color:var(--muted);margin-top:6px;min-height:18px}
+  .legend-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:8px 0 6px;font-family:'Raleway',sans-serif;font-size:11px;color:var(--dark);letter-spacing:.5px}
+  .legend-inline span{display:inline-flex;align-items:center;gap:6px}
+  .legend-inline i{display:inline-block;width:12px;height:12px;border-radius:3px}
   .tooltip{position:fixed;pointer-events:none;background:#0d2035;color:#fff;padding:6px 10px;border-radius:6px;font-family:'Raleway',sans-serif;font-size:11px;line-height:1.4;opacity:0;transition:opacity .12s;z-index:99;box-shadow:0 4px 12px rgba(0,0,0,.2)}
   .tooltip strong{color:#a8d8ea}
 
@@ -220,6 +223,7 @@
       <div class="chart-box">
         <div class="chart-title">03 · Ice Mass Loss: Greenland + Antarctica (2002–2025)</div>
         <div class="chart-sub">Hover any bar for cumulative gigatonnes lost since the GRACE satellite launch.</div>
+        <div class="legend-inline"><span><i style="background:#2196f3"></i>Greenland</span><span><i style="background:#7c3aed"></i>Antarctica</span></div>
         <svg id="massLoss" viewBox="0 0 440 260" style="width:100%;height:auto;display:block"></svg>
         <div class="readout" id="massReadout">Hover a bar.</div>
         <div class="modis-note">MODIS Snow Cover (MOD10A1) provides surface ablation context for GRACE gravity-anomaly ice-mass measurements. <em>Placeholder values, real GRACE CSV pending.</em></div>
@@ -583,11 +587,13 @@ function hideTip(){ tt.style('opacity',0); }
   y.ticks(5).forEach(t=>g.append('line').attr('x1',0).attr('x2',iw).attr('y1',y(t)).attr('y2',y(t)).attr('stroke','rgba(33,150,243,.08)').attr('stroke-width',0.5));
   g.append('line').attr('x1',0).attr('x2',iw).attr('y1',y0).attr('y2',y0).attr('stroke','rgba(0,0,0,.15)').attr('stroke-width',1);
   data.forEach(d=>{
-    g.append('rect').attr('x',x(d.yr)).attr('y',y(d.grn)).attr('width',x.bandwidth()/2-0.5).attr('height',y0-y(d.grn)).attr('fill','#2196f3').attr('opacity',0.7).style('cursor','pointer')
+    const gy=Math.min(y0,y(d.grn)), gh=Math.abs(y(d.grn)-y0);
+    const ay=Math.min(y0,y(d.ant)), ah=Math.abs(y(d.ant)-y0);
+    g.append('rect').attr('x',x(d.yr)).attr('y',gy).attr('width',x.bandwidth()/2-0.5).attr('height',gh).attr('fill','#2196f3').attr('opacity',0.7).style('cursor','pointer')
       .on('mouseover',e=>showTip(`<strong>Greenland · ${d.yr}</strong><br>${(d.grn/1000).toFixed(2)} k Gt cumulative`,e))
       .on('mousemove',moveTip).on('mouseout',hideTip)
       .on('click',()=>d3.select('#massReadout').html(`<strong>Greenland ${d.yr}</strong>: ${(d.grn/1000).toFixed(2)} k Gt lost since 2002.`));
-    g.append('rect').attr('x',x(d.yr)+x.bandwidth()/2+0.5).attr('y',y(d.ant)).attr('width',x.bandwidth()/2-0.5).attr('height',y0-y(d.ant)).attr('fill','#7c3aed').attr('opacity',0.7).style('cursor','pointer')
+    g.append('rect').attr('x',x(d.yr)+x.bandwidth()/2+0.5).attr('y',ay).attr('width',x.bandwidth()/2-0.5).attr('height',ah).attr('fill','#7c3aed').attr('opacity',0.7).style('cursor','pointer')
       .on('mouseover',e=>showTip(`<strong>Antarctica · ${d.yr}</strong><br>${(d.ant/1000).toFixed(2)} k Gt cumulative`,e))
       .on('mousemove',moveTip).on('mouseout',hideTip)
       .on('click',()=>d3.select('#massReadout').html(`<strong>Antarctica ${d.yr}</strong>: ${(d.ant/1000).toFixed(2)} k Gt lost since 2002.`));
@@ -600,10 +606,7 @@ function hideTip(){ tt.style('opacity',0); }
     .call(ax=>ax.selectAll('text').attr('fill',muted).attr('font-size',9))
     .call(ax=>ax.select('.domain').attr('stroke','rgba(33,150,243,.2)'))
     .call(ax=>ax.selectAll('.tick line').attr('stroke','rgba(33,150,243,.2)'));
-  g.append('rect').attr('x',iw-90).attr('y',10).attr('width',12).attr('height',12).attr('fill','#2196f3').attr('opacity',0.7);
-  g.append('text').attr('x',iw-74).attr('y',21).attr('fill',muted).attr('font-size',10).text('Greenland');
-  g.append('rect').attr('x',iw-90).attr('y',28).attr('width',12).attr('height',12).attr('fill','#7c3aed').attr('opacity',0.7);
-  g.append('text').attr('x',iw-74).attr('y',39).attr('fill',muted).attr('font-size',10).text('Antarctica');
+  // Legend lives in HTML above the SVG, see .legend-inline
 })();
 // VIZ 4
 (function(){
